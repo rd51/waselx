@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaselX - Delivery Network Optimization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-network-wired"></i> WaselX Dashboard
+            </span>
+            <span class="navbar-text text-light">
+                <small id="status-indicator"><span class="badge bg-success">ONLINE</span></small>
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid py-4">
+        <!-- Status Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Network Nodes</h5>
+                        <h2 id="total-nodes">15</h2>
+                        <small>7 Hubs | 8 Distribution</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Network Edges</h5>
+                        <h2 id="total-edges">24</h2>
+                        <small>Total Connections</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Network Status</h5>
+                        <h2 id="network-status">✓ Active</h2>
+                        <small>Fully Operational</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Blocked Routes</h5>
+                        <h2 id="blocked-routes">0</h2>
+                        <small>Road Closures</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tab-network">Network</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-paths">Path Finder</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-algorithms">Algorithms</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab-simulator">Simulator</a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Network Tab -->
+            <div id="tab-network" class="tab-pane fade show active">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Network Topology</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="network-graph" style="height: 600px;"></div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <strong>Blue:</strong> Hub Nodes | <strong>Orange:</strong> Distribution Centers
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Path Finder Tab -->
+            <div id="tab-paths" class="tab-pane fade">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Find Shortest Path</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Node</label>
+                                    <select id="path-start" class="form-select">
+                                        <option value="">Select Start...</option>
+                                        {% for node in nodes %}
+                                        <option value="{{ node }}">{{ node }} - {{ node_labels[node] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">End Node</label>
+                                    <select id="path-end" class="form-select">
+                                        <option value="">Select End...</option>
+                                        {% for node in nodes %}
+                                        <option value="{{ node }}">{{ node }} - {{ node_labels[node] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Optimization Criteria</label>
+                                    <select id="path-weight" class="form-select">
+                                        <option value="distance">Shortest Distance</option>
+                                        <option value="time">Fastest Time</option>
+                                        <option value="cost">Lowest Cost</option>
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-primary w-100" onclick="findPath()">
+                                    Find Path
+                                </button>
+
+                                <hr>
+
+                                <button class="btn btn-info w-100 mt-2" onclick="comparePaths()">
+                                    Compare All Criteria
+                                </button>
+
+                                <div id="path-result" class="mt-3" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <strong>Path:</strong> <span id="result-path"></span><br>
+                                        <strong>Distance:</strong> <span id="result-distance"></span> km<br>
+                                        <strong>Time:</strong> <span id="result-time"></span> min<br>
+                                        <strong>Cost:</strong> <span id="result-cost"></span> AED
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Path Visualization</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="path-graph" style="height: 600px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Algorithms Tab -->
+            <div id="tab-algorithms" class="tab-pane fade">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Sorting Performance Benchmark</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="sorting-graph" style="height: 400px;"></div>
+                                <small class="text-muted mt-2">
+                                    Comparisons needed to sort reversed arrays of various sizes
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Minimum Spanning Tree</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="mst-info">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Search Algorithm Comparison</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Target Value</th>
+                                    <th>Linear Search</th>
+                                    <th>Binary Search</th>
+                                    <th>Improvement</th>
+                                </tr>
+                            </thead>
+                            <tbody id="search-results">
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulator Tab -->
+            <div id="tab-simulator" class="tab-pane fade">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Road Closure Simulator</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Block Route From</label>
+                                    <select id="closure-from" class="form-select">
+                                        <option value="">Select Node...</option>
+                                        {% for node in nodes %}
+                                        <option value="{{ node }}">{{ node }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">To</label>
+                                    <select id="closure-to" class="form-select">
+                                        <option value="">Select Node...</option>
+                                        {% for node in nodes %}
+                                        <option value="{{ node }}">{{ node }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <button class="btn btn-danger w-100 mb-2" onclick="blockRoute()">
+                                    Block Route
+                                </button>
+
+                                <button class="btn btn-warning w-100" onclick="clearClosures()">
+                                    Clear All Blocks
+                                </button>
+
+                                <div id="closure-result" class="mt-3" style="display: none;">
+                                    <div class="alert alert-warning alert-dismissible fade show">
+                                        <strong>Status:</strong> <span id="closure-status"></span>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <h6>Simulator Stats</h6>
+                                <ul class="list-unstyled small">
+                                    <li><strong>Active Routes:</strong> <span id="sim-active">24</span></li>
+                                    <li><strong>Blocked Routes:</strong> <span id="sim-blocked">0</span></li>
+                                    <li><strong>Network Status:</strong> <span id="sim-status" class="badge bg-success">Online</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Network State</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="simulator-graph" style="height: 600px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5 py-4 text-center">
+        <p class="mb-0">
+            <strong>WaselX</strong> - Delivery Network Optimization Dashboard v1.0.0
+        </p>
+        <small>Group Final Project | S.P. Jain Institute | 2026</small>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

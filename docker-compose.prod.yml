@@ -1,0 +1,67 @@
+# WaselX Docker Compose - Production with nginx Reverse Proxy
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Adds nginx reverse-proxy with HTTPS, rate limiting, caching
+
+version: '3.8'
+
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: waselx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ./html:/usr/share/nginx/html:ro
+    depends_on:
+      - waselx-app
+    networks:
+      - waselx-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+
+  # Optional: Redis for caching (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: waselx-cache
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - waselx-network
+  #   command: redis-server --appendonly yes --requirepass your-redis-password
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+
+# volumes:
+#   redis-data:
+#     driver: local
+
+networks:
+  waselx-network:
+    external: true

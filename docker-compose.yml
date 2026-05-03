@@ -1,0 +1,50 @@
+services:
+  waselx-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waselx-simulator
+    image: waselx:latest
+    ports:
+      - "${FLASK_PORT:-5000}:5000"
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-production}
+      FLASK_DEBUG: ${FLASK_DEBUG:-0}
+      PYTHONUNBUFFERED: 1
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    env_file:
+      - .env.prod
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - waselx-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '1'
+          memory: 256M
+
+networks:
+  waselx-network:
+    driver: bridge
+
+volumes:
+  app-data:
+    driver: local
