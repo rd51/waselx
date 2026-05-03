@@ -5,7 +5,7 @@ The WaselX project now includes a Streamlit frontend (`streamlit_app.py`) that c
 
 ## Files
 - **`streamlit_app.py`** — Streamlit application (4 tabs: Network, Path Finder, Algorithms, Simulator)
-- **`streamlit_requirements.txt`** — Dependencies for Streamlit app
+- **`requirements.txt`** — Unified project dependencies
 - **`Dockerfile.streamlit`** — Docker image for containerized Streamlit deployment
 - **`.streamlit/config.toml`** — Streamlit configuration (theme, server settings)
 - **`.streamlit/secrets.toml.example`** — API URL configuration template
@@ -96,7 +96,7 @@ docker compose -f docker-compose.all.yml up -d
 
 **Install dependencies:**
 ```bash
-pip install -r streamlit_requirements.txt
+pip install -r requirements.txt
 ```
 
 **Start Flask API in one terminal:**
