@@ -1,10 +1,10 @@
 import streamlit as st
 import requests
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.io as pio
 import pandas as pd
 from datetime import datetime
-import json
+import os
 
 # Page configuration
 st.set_page_config(
@@ -43,8 +43,36 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def _get_api_base_url() -> str:
+    """Return the API URL from secrets, environment, or a local fallback."""
+    default_url = "http://localhost:5000"
+    try:
+        if "API_URL" in st.secrets:
+            return st.secrets["API_URL"]
+    except Exception:
+        pass
+
+    return os.getenv("API_URL", default_url)
+
+
 # API base URL
-API_BASE_URL = st.secrets.get("API_URL", "http://localhost:5000")
+API_BASE_URL = _get_api_base_url()
+
+
+def render_plotly_json(graph_json, empty_message="Visualization data was not returned by the API."):
+    """Render a Plotly figure serialized by the Flask API."""
+    if not graph_json:
+        st.warning(empty_message)
+        return False
+
+    try:
+        fig = pio.from_json(graph_json)
+    except (TypeError, ValueError) as exc:
+        st.error(f"Could not render Plotly visualization: {exc}")
+        return False
+
+    st.plotly_chart(fig, use_container_width=True)
+    return True
 
 # Initialize session state
 if "api_connected" not in st.session_state:
@@ -67,9 +95,21 @@ def get_simulator_status():
     try:
         resp = requests.get(f"{API_BASE_URL}/api/simulator-status", timeout=5)
         if resp.status_code == 200:
-            return resp.json()
+            payload = resp.json()
+            return payload.get("data", payload)
     except Exception as e:
         st.warning(f"Error fetching simulator status: {e}")
+    return None
+
+
+def get_network_graph():
+    """Fetch the serialized Plotly network graph."""
+    try:
+        resp = requests.get(f"{API_BASE_URL}/api/graph", timeout=5)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as e:
+        st.error(f"Error fetching network visualization: {e}")
     return None
 
 
@@ -82,7 +122,8 @@ def find_shortest_path(start, end, weight):
             timeout=5
         )
         if resp.status_code == 200:
-            return resp.json()
+            payload = resp.json()
+            return payload.get("data", payload)
     except Exception as e:
         st.error(f"Error finding path: {e}")
     return None
@@ -97,7 +138,8 @@ def compare_all_paths(start, end):
             timeout=5
         )
         if resp.status_code == 200:
-            return resp.json()
+            payload = resp.json()
+            return payload.get("data", payload)
     except Exception as e:
         st.error(f"Error comparing paths: {e}")
     return None
@@ -108,7 +150,8 @@ def get_mst_results():
     try:
         resp = requests.get(f"{API_BASE_URL}/api/mst", timeout=5)
         if resp.status_code == 200:
-            return resp.json()
+            payload = resp.json()
+            return payload.get("data", payload)
     except Exception as e:
         st.error(f"Error fetching MST results: {e}")
     return None
@@ -130,7 +173,8 @@ def get_search_benchmark():
     try:
         resp = requests.get(f"{API_BASE_URL}/api/search-benchmark", timeout=5)
         if resp.status_code == 200:
-            return resp.json()
+            payload = resp.json()
+            return payload.get("data", payload)
     except Exception as e:
         st.error(f"Error fetching search benchmark: {e}")
     return None
@@ -145,7 +189,8 @@ def block_route(from_node, to_node):
             timeout=5
         )
         if resp.status_code == 200:
-            return resp.json()
+            payload = resp.json()
+            return payload.get("data", payload)
     except Exception as e:
         st.error(f"Error blocking route: {e}")
     return None
@@ -200,21 +245,22 @@ if page == "🌐 Network":
         # Metrics row
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.metric("Total Nodes", status["network"].get("nodes", 0))
+            st.metric("Total Nodes", status.get("total_nodes", 0))
         with col2:
-            st.metric("Hubs", status["network"].get("hubs", 0))
+            st.metric("Hubs", status.get("hubs", 0))
         with col3:
-            st.metric("Distribution Pts", status["network"].get("distributions", 0))
+            st.metric("Distribution Pts", status.get("distribution_centers", status.get("distributions", 0)))
         with col4:
-            st.metric("Routes", status["network"].get("edges", 0))
+            st.metric("Routes", status.get("total_edges", status.get("edges", 0)))
         with col5:
-            status_text = "🟢 Online" if status["network"].get("connected") else "🔴 Offline"
+            status_text = "🟢 Online" if status.get("network_connected", status.get("connected", False)) else "🔴 Offline"
             st.metric("Status", status_text)
         
         st.divider()
         
-        # Visualization placeholder
-        st.info("📊 Network visualization (Plotly graph would render here)")
+        graph_payload = get_network_graph()
+        if graph_payload:
+            render_plotly_json(graph_payload.get("graph"))
         st.markdown("""
         **Network Structure:**
         - **Blue Nodes:** Distribution Hubs (H1-H7)
@@ -265,46 +311,59 @@ elif page == "🔍 Path Finder":
             result = find_shortest_path(start_node, end_node, weight)
             if result:
                 # Display path
-                path_text = " → ".join(result.get("path", []))
+                path_text = " -> ".join(result.get("path", []))
                 st.markdown(f"**Path:** {path_text}")
                 
                 # Metrics
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Distance", f"{result.get('distance_km', 0)} km")
+                    st.metric("Distance", f"{result.get('distance', result.get('distance_km', 0))} km")
                 with col2:
-                    st.metric("Time", f"{result.get('time_min', 0)} min")
+                    st.metric("Time", f"{result.get('time', result.get('time_min', 0))} min")
                 with col3:
-                    st.metric("Cost", f"{result.get('cost_aed', 0)} AED")
+                    st.metric("Cost", f"{result.get('cost', result.get('cost_aed', 0))} AED")
                 
-                # Visualization info
-                if "visualization" in result:
-                    st.info("📊 Path visualization (Plotly graph would render here)")
+                render_plotly_json(
+                    result.get("graph"),
+                    "Path visualization data was not returned by the API."
+                )
     
     # Compare all criteria
     if compare_btn:
         with st.spinner("Comparing all optimization criteria..."):
             result = compare_all_paths(start_node, end_node)
             if result:
-                paths = result.get("paths", {})
+                paths = result.get("paths", [])
                 
                 st.markdown("### Multi-Criteria Comparison")
                 
                 # Create comparison table
                 comparison_data = []
-                for criteria, path_info in paths.items():
+                if isinstance(paths, dict):
+                    path_items = [
+                        {"criterion": criteria, **path_info}
+                        for criteria, path_info in paths.items()
+                    ]
+                else:
+                    path_items = paths
+
+                for path_info in path_items:
+                    criteria = path_info.get("criterion", "")
                     comparison_data.append({
                         "Criteria": criteria.capitalize(),
-                        "Distance (km)": path_info.get("distance_km", 0),
-                        "Time (min)": path_info.get("time_min", 0),
-                        "Cost (AED)": path_info.get("cost_aed", 0),
-                        "Path": " → ".join(path_info.get("path", []))
+                        "Distance (km)": path_info.get("distance", path_info.get("distance_km", 0)),
+                        "Time (min)": path_info.get("time", path_info.get("time_min", 0)),
+                        "Cost (AED)": path_info.get("cost", path_info.get("cost_aed", 0)),
+                        "Path": " -> ".join(path_info.get("path", []))
                     })
                 
                 df = pd.DataFrame(comparison_data)
                 st.dataframe(df, use_container_width=True)
                 
-                st.info("📊 Comparison visualization (Plotly overlay would render here)")
+                render_plotly_json(
+                    result.get("graph"),
+                    "Comparison visualization data was not returned by the API."
+                )
 
 
 # Page: Algorithms
@@ -326,18 +385,10 @@ elif page == "📊 Algorithms":
             - **Test Case:** Sorting reversed delivery routes
             """)
             
-            # Create sample data visualization
-            sort_data = pd.DataFrame({
-                "Size": [10, 50, 100, 200, 300],
-                "Bubble": [45, 1225, 4950, 19900, 44850],
-                "Merge": [34, 258, 665, 1532, 2656],
-                "Quick": [23, 217, 524, 1198, 2058]
-            })
-            
-            fig = px.line(sort_data, x="Size", y=["Bubble", "Merge", "Quick"], 
-                         title="Sorting Algorithm Comparison",
-                         labels={"value": "Comparisons", "variable": "Algorithm"})
-            st.plotly_chart(fig, use_container_width=True)
+            render_plotly_json(
+                benchmark.get("graph"),
+                "Sorting benchmark visualization data was not returned by the API."
+            )
             
             # Performance table
             st.markdown("**Benchmark Results (on 100-element array):**")
@@ -362,14 +413,14 @@ elif page == "📊 Algorithms":
                 kruskal = mst.get("kruskal", {})
                 st.metric("Edges", kruskal.get("edges", 0))
                 st.metric("Total Cost (AED)", f"{kruskal.get('cost', 0):.2f}")
-                st.markdown(f"**Connections:** {', '.join(kruskal.get('sample_edges', [])[:5])}")
+                st.markdown(f"**Connections:** {', '.join(kruskal.get('connections', kruskal.get('sample_edges', []))[:5])}")
             
             with col2:
                 st.markdown("**Prim's Algorithm**")
                 prim = mst.get("prim", {})
                 st.metric("Edges", prim.get("edges", 0))
                 st.metric("Total Cost (AED)", f"{prim.get('cost', 0):.2f}")
-                st.markdown(f"**Connections:** {', '.join(prim.get('sample_edges', [])[:5])}")
+                st.markdown(f"**Connections:** {', '.join(prim.get('connections', prim.get('sample_edges', []))[:5])}")
             
             # Comparison
             st.divider()
@@ -393,13 +444,15 @@ elif page == "📊 Algorithms":
             - **Metric:** Number of comparisons needed
             """)
             
-            # Create comparison table
-            search_df = pd.DataFrame({
-                "Target Value": [3, 12, 21],
-                "Linear Search": [2, 6, 10],
-                "Binary Search": [3, 5, 7],
-                "Improvement": ["-50.0%", "16.7%", "30.0%"]
-            })
+            search_df = pd.DataFrame([
+                {
+                    "Target Value": item.get("target", 0),
+                    "Linear Search": item.get("linear_comparisons", 0),
+                    "Binary Search": item.get("binary_comparisons", 0),
+                    "Improvement": item.get("improvement", "N/A")
+                }
+                for item in search
+            ])
             
             st.dataframe(search_df, use_container_width=True)
             
@@ -464,7 +517,12 @@ elif page == "🚗 Simulator":
             st.rerun()
     
     st.divider()
-    st.info("📊 Network state visualization (Plotly graph would render here)")
+    graph_payload = get_network_graph()
+    if graph_payload:
+        render_plotly_json(
+            graph_payload.get("graph"),
+            "Simulator visualization data was not returned by the API."
+        )
     st.markdown("The network remains operational despite blockages, with alternate routes available.")
 
 

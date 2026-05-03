@@ -4,7 +4,8 @@ Deployment-ready web interface for network optimization simulator
 """
 
 import importlib
-from flask import Flask, render_template, jsonify, request
+from functools import lru_cache
+from flask import Flask, render_template, jsonify, request, Response
 from flask_cors import CORS
 import json
 import plotly.graph_objects as go
@@ -215,6 +216,20 @@ def index():
 def health():
     """Health check endpoint."""
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+
+
+@lru_cache(maxsize=1)
+def _plotly_js_bundle():
+    """Return Plotly's local JavaScript bundle for offline dashboard rendering."""
+    from plotly.offline import get_plotlyjs
+
+    return get_plotlyjs()
+
+
+@app.route('/plotly.min.js')
+def plotly_js():
+    """Serve Plotly locally so the dashboard works without CDN access."""
+    return Response(_plotly_js_bundle(), mimetype='application/javascript')
 
 
 @app.route('/api/network', methods=['GET'])
@@ -474,9 +489,9 @@ if __name__ == '__main__':
     print("  WaselX - Delivery Network Optimization Dashboard")
     print("  Flask Web Server v1.0.0")
     print("="*70)
-    print("\n✓ Network initialized: 15 nodes, 24 edges")
-    print("✓ Simulators ready: Dijkstra, Floyd-Warshall, MST, Sorting, Searching")
-    print("✓ Dashboard available: http://localhost:5000")
+    print("\n[OK] Network initialized: 15 nodes, 24 edges")
+    print("[OK] Simulators ready: Dijkstra, Floyd-Warshall, MST, Sorting, Searching")
+    print("[OK] Dashboard available: http://localhost:5000")
     print("\nStarting Flask development server...\n")
     
     app.run(

@@ -1,66 +1,97 @@
 # WaselX - Delivery Network Optimization
 
-A comprehensive Data Structures and Algorithms project implementing various optimization techniques for delivery network management.
+WaselX is a Data Structures and Algorithms project that models delivery-network optimization for a last-mile logistics company. It includes graph algorithms, tree structures, linear data structures, sorting/searching benchmarks, a Flask API dashboard, and a Streamlit frontend.
 
 ## Project Structure
 
-```
+```text
 WaselX/
-├── data/                 # Network data loading and management
-├── task_a/              # Graph algorithms (shortest paths, MST, traversals)
-├── task_b/              # Binary search trees and AVL trees
-├── task_c/              # Linear data structures (linked lists, stacks, queues)
-├── task_d/              # Sorting and searching algorithms
-├── task_e/              # Network simulator
-├── utils/               # Visualization and utility functions
-├── main.py              # Main entry point
-└── requirements.txt     # Project dependencies
+|-- app.py                         # Flask backend API and dashboard
+|-- streamlit_app.py               # Streamlit frontend
+|-- main.py                        # CLI demonstration entry point
+|-- data/                          # Network data and helpers
+|-- task_a/                        # Graph algorithms
+|-- task_b/                        # BST and AVL tree implementations
+|-- task_c/                        # Linked lists, priority queue, stack
+|-- task_d/                        # Sorting and searching algorithms
+|-- task_e/                        # Network simulator
+|-- static/                        # Flask dashboard CSS/JS
+|-- templates/                     # Flask HTML templates
+|-- utils/                         # Visualization helpers
+|-- TECHNICAL_REQUIREMENTS_REPORT.md
+|-- TRD.md
+`-- requirements.txt
 ```
-
-## Tasks Overview
-
-### Task A: Graph Algorithms
-- Graph data structure implementation
-- Dijkstra's shortest path algorithm
-- Floyd-Warshall all-pairs shortest path
-- Minimum Spanning Tree (Prim's and Kruskal's algorithms)
-- Graph traversals (BFS and DFS)
-
-### Task B: Binary Search Trees
-- Binary Search Tree (BST) implementation
-- AVL Tree (self-balancing BST)
-
-### Task C: Linear Data Structures
-- Singly Linked List
-- Circular Linked List
-- Priority Queue
-- Stack (LIFO)
-
-### Task D: Sorting and Searching
-- Sorting algorithms (Bubble, Merge, Quick sort)
-- Searching algorithms (Linear and Binary search)
-
-### Task E: Network Simulator
-- Delivery network simulation
-- Optimization engine
 
 ## Requirements
 
 - Python 3.10+
-- matplotlib (for visualization)
+- pip
 
-## Installation
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+## Run Locally
+
+Start the Flask backend:
+
+```bash
+python app.py
+```
+
+Backend URL:
+
+```text
+http://localhost:5000
+```
+
+Start the Streamlit frontend in another terminal:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Frontend URL:
+
+```text
+http://localhost:8501
+```
+
+Run the CLI demonstration:
 
 ```bash
 python main.py
 ```
 
-## Development
+## Core Features
 
-This is a group final project for S.P. Jain Institute's Data Structures and Algorithms course.
+- Network topology visualization with Plotly.
+- Shortest path optimization by distance, time, or cost.
+- Multi-criteria route comparison.
+- Minimum spanning tree calculations using Kruskal and Prim.
+- Sorting and searching benchmarks.
+- Road-closure simulation.
+- Academic technical requirements report for final evaluation.
+
+## Key Documents
+
+- `TECHNICAL_REQUIREMENTS_REPORT.md` - overall final technical requirements report.
+- `TRD.md` - detailed technical requirements document.
+- `REPORT_TEMPLATE.md` - long-form academic report template.
+- `TASK_B_TREES.md`, `TASK_C_QUEUES.md`, `TASK_D_SORTING_SEARCHING.md`, `TASK_E_MANAGEMENT_LEADERSHIP.md` - task-area documentation.
+
+## Verification
+
+```bash
+python -m py_compile app.py streamlit_app.py main.py
+```
+
+Health checks:
+
+```text
+http://localhost:5000/health
+http://localhost:8501/healthz
+```
