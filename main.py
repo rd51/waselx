@@ -1,5 +1,6 @@
 """Main entry point for WaselX delivery network optimization."""
 
+import importlib
 import sys
 from data.network import NODES, NODE_LABELS, EDGES, build_adj_list
 from task_a.graph import Graph
@@ -17,6 +18,21 @@ from task_d.sorting import bubble_sort, merge_sort, quick_sort
 from task_d.searching import linear_search, binary_search
 from task_e.simulator import Simulator
 from utils.visualizer import draw_network
+
+
+def _check_runtime_dependencies() -> None:
+    """Fail fast with a clear install message when dependencies are missing."""
+    required = ["numpy", "matplotlib", "plotly"]
+    for module_name in required:
+        try:
+            importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            raise SystemExit(
+                f"Missing dependency '{module_name}'. Install with: pip install -r requirements.txt"
+            )
+
+
+_check_runtime_dependencies()
 
 
 def print_section(title: str):

@@ -3,6 +3,7 @@ WaselX Web Dashboard - Flask Application
 Deployment-ready web interface for network optimization simulator
 """
 
+import importlib
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 import json
@@ -10,6 +11,21 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
 import os
+
+
+def _check_runtime_dependencies() -> None:
+    """Fail fast with a clear install message when dependencies are missing."""
+    required = ["flask", "flask_cors", "plotly"]
+    for module_name in required:
+        try:
+            importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            raise SystemExit(
+                f"Missing dependency '{module_name}'. Install with: pip install -r requirements.txt"
+            )
+
+
+_check_runtime_dependencies()
 
 # Import WaselX modules
 from data.network import NODES, NODE_LABELS, EDGES, build_adj_list

@@ -154,7 +154,7 @@ project-root/
 ├── docker-compose.yml          ← Production hardened (no version key)
 ├── docker-compose.prod.yml     ← Optional nginx overlay
 ├── Dockerfile                  ← Multi-stage Python 3.11-slim
-├── requirements-docker.txt     ← Dependencies
+├── requirements.txt            ← Unified dependencies
 ├── nginx.conf                  ← Reverse proxy config
 ├── .env.prod.template          ← Environment template
 ├── .env.prod                   ← Production environment (from template)
