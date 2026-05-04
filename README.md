@@ -1,13 +1,13 @@
 # WaselX - Delivery Network Optimization
 
-WaselX is a Data Structures and Algorithms project that models delivery-network optimization for a last-mile logistics company. It includes graph algorithms, tree structures, linear data structures, sorting/searching benchmarks, a Flask API dashboard, and a Streamlit frontend.
+WaselX is a Data Structures and Algorithms project that models delivery-network optimization for a last-mile logistics company. It includes graph algorithms, tree structures, linear data structures, sorting/searching benchmarks, a Flask API dashboard, and a self-contained Streamlit frontend.
 
 ## Project Structure
 
 ```text
 WaselX/
 |-- app.py                         # Flask backend API and dashboard
-|-- streamlit_app.py               # Streamlit frontend
+|-- streamlit_app.py               # Self-contained Streamlit frontend
 |-- main.py                        # CLI demonstration entry point
 |-- data/                          # Network data and helpers
 |-- task_a/                        # Graph algorithms
@@ -18,8 +18,7 @@ WaselX/
 |-- static/                        # Flask dashboard CSS/JS
 |-- templates/                     # Flask HTML templates
 |-- utils/                         # Visualization helpers
-|-- TECHNICAL_REQUIREMENTS_REPORT.md
-|-- TRD.md
+|-- REPORT_TEMPLATE.md             # Academic report scaffold
 `-- requirements.txt
 ```
 
@@ -34,21 +33,15 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+## Streamlit Cloud Deployment
+
+Deploy `streamlit_app.py` as the app entrypoint.
+
+The Streamlit app is self-contained and directly imports the project modules, so Streamlit Cloud does not need a separate Flask backend or `API_URL` secret.
+
 ## Run Locally
 
-Start the Flask backend:
-
-```bash
-python app.py
-```
-
-Backend URL:
-
-```text
-http://localhost:5000
-```
-
-Start the Streamlit frontend in another terminal:
+Run the Streamlit frontend:
 
 ```bash
 streamlit run streamlit_app.py
@@ -58,6 +51,18 @@ Frontend URL:
 
 ```text
 http://localhost:8501
+```
+
+Optional Flask backend/API dashboard:
+
+```bash
+python app.py
+```
+
+Backend URL:
+
+```text
+http://localhost:5000
 ```
 
 Run the CLI demonstration:
@@ -74,14 +79,13 @@ python main.py
 - Minimum spanning tree calculations using Kruskal and Prim.
 - Sorting and searching benchmarks.
 - Road-closure simulation.
-- Academic technical requirements report for final evaluation.
+- CLI, Flask, and Streamlit demonstration modes.
 
 ## Key Documents
 
-- `TECHNICAL_REQUIREMENTS_REPORT.md` - overall final technical requirements report.
-- `TRD.md` - detailed technical requirements document.
-- `REPORT_TEMPLATE.md` - long-form academic report template.
-- `TASK_B_TREES.md`, `TASK_C_QUEUES.md`, `TASK_D_SORTING_SEARCHING.md`, `TASK_E_MANAGEMENT_LEADERSHIP.md` - task-area documentation.
+- `REPORT_TEMPLATE.md` - long-form academic report scaffold.
+- `QUICK_REFERENCE.md` - quick project reference.
+- `WaselX_MAIB_Final_Project.docx` - assignment/project brief.
 
 ## Verification
 
@@ -89,9 +93,9 @@ python main.py
 python -m py_compile app.py streamlit_app.py main.py
 ```
 
-Health checks:
+Health checks when services are running:
 
 ```text
-http://localhost:5000/health
 http://localhost:8501/healthz
+http://localhost:5000/health
 ```
