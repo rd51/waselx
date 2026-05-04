@@ -9,6 +9,7 @@ WaselX/
 |-- app.py                         # Flask backend API and dashboard
 |-- streamlit_app.py               # Self-contained Streamlit frontend
 |-- main.py                        # CLI demonstration entry point
+|-- render.yaml                    # Render backend deployment blueprint
 |-- data/                          # Network data and helpers
 |-- task_a/                        # Graph algorithms
 |-- task_b/                        # BST and AVL tree implementations
@@ -38,6 +39,36 @@ pip install -r requirements.txt
 Deploy `streamlit_app.py` as the app entrypoint.
 
 The Streamlit app is self-contained and directly imports the project modules, so Streamlit Cloud does not need a separate Flask backend or `API_URL` secret.
+
+## Render Backend Deployment
+
+The Flask backend can be deployed as a separate Render Web Service.
+
+Option A: Blueprint deployment
+
+1. Push the repo to GitHub.
+2. In Render, choose **New > Blueprint**.
+3. Connect this repository and select `main`.
+4. Render will read `render.yaml` and create the `waselx-api` web service.
+
+Option B: Manual Web Service
+
+Use these settings in Render:
+
+```text
+Service type: Web Service
+Runtime: Python 3
+Build command: pip install -r requirements.txt
+Start command: gunicorn app:app
+Health check path: /health
+Instance type: Free
+```
+
+After deployment, verify the backend at:
+
+```text
+https://your-render-service.onrender.com/health
+```
 
 ## Run Locally
 

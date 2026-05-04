@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: waselx-api
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
