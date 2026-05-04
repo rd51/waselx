@@ -47,72 +47,9 @@ st.markdown(
     h1, h2, h3 {
         letter-spacing: 0;
     }
-    .wx-hero {
-        padding: 1.35rem 1.45rem;
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        border-radius: 8px;
-        background:
-            linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 118, 110, 0.92)),
-            repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 12px);
-        color: #f8fafc;
-        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
-        margin-bottom: 1rem;
-    }
-    .wx-eyebrow {
-        color: #facc15;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        margin-bottom: 0.35rem;
-    }
-    .wx-hero h1 {
-        color: #ffffff;
-        margin: 0;
-        font-size: 2rem;
-        line-height: 1.12;
-    }
-    .wx-hero p {
-        max-width: 860px;
-        margin: 0.7rem 0 0;
-        color: #dbeafe;
-        font-size: 1rem;
-    }
-    .wx-kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.8rem;
-        margin: 0.65rem 0 1.05rem;
-    }
-    .wx-kpi {
-        border: 1px solid rgba(15, 23, 42, 0.12);
-        border-left: 5px solid var(--accent);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.88);
-        padding: 0.95rem 1rem;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-    }
-    .wx-kpi-label {
-        color: #475569;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .wx-kpi-value {
-        color: #0f172a;
-        font-size: 1.45rem;
-        font-weight: 800;
-        line-height: 1.2;
-        margin-top: 0.25rem;
-    }
-    .wx-kpi-note {
-        color: #64748b;
-        font-size: 0.82rem;
-        margin-top: 0.25rem;
-    }
     .wx-insight {
         border: 1px solid rgba(15, 23, 42, 0.14);
-        border-left: 6px solid var(--accent);
+        border-left: 6px solid #0f766e;
         border-radius: 8px;
         background: rgba(255, 255, 255, 0.91);
         padding: 1rem 1.1rem;
@@ -134,13 +71,6 @@ st.markdown(
         border-color: rgba(15, 23, 42, 0.18);
         box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
         background: rgba(255, 255, 255, 0.9);
-    }
-    @media (max-width: 900px) {
-        .wx-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .wx-hero h1 { font-size: 1.55rem; }
-    }
-    @media (max-width: 560px) {
-        .wx-kpi-grid { grid-template-columns: 1fr; }
     }
     </style>
     """,
@@ -191,35 +121,22 @@ def format_aed(value: int | float) -> str:
     return f"AED {value:,.0f}"
 
 
-def kpi_card(label: str, value: str, note: str, accent: str) -> str:
-    """Return one KPI card as HTML."""
-    return f"""
-        <div class="wx-kpi" style="--accent:{accent}">
-            <div class="wx-kpi-label">{label}</div>
-            <div class="wx-kpi-value">{value}</div>
-            <div class="wx-kpi-note">{note}</div>
-        </div>
-    """
-
-
 def render_kpis(cards: list[tuple[str, str, str, str]]) -> None:
-    """Render a grid of compact KPI cards."""
-    html = '<div class="wx-kpi-grid">' + "".join(kpi_card(*card) for card in cards) + "</div>"
-    st.markdown(html, unsafe_allow_html=True)
+    """Render KPI cards with native Streamlit components."""
+    columns = st.columns(len(cards))
+    for column, (label, value, note, _accent) in zip(columns, cards):
+        with column:
+            with st.container(border=True):
+                st.metric(label, value)
+                st.caption(note)
 
 
 def render_insight(title: str, bullets: list[str], accent: str = "#0f766e") -> None:
     """Render a business insight panel."""
-    bullet_html = "".join(f"<li>{bullet}</li>" for bullet in bullets)
-    st.markdown(
-        f"""
-        <div class="wx-insight" style="--accent:{accent}">
-            <h4>{title}</h4>
-            <ul>{bullet_html}</ul>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.container(border=True):
+        st.markdown(f"#### {title}")
+        for bullet in bullets:
+            st.markdown(f"- {bullet}")
 
 
 def render_plot_box(title: str, fig, caption: str | None = None) -> None:
@@ -521,20 +438,16 @@ def clear_route_blocks():
     get_simulator().clear_blocks()
 
 
-st.markdown(
-    f"""
-    <section class="wx-hero">
-        <div class="wx-eyebrow">UAE last-mile delivery simulator</div>
-        <h1>WaselX Delivery Network Optimization</h1>
-        <p>
-            A self-contained DSA command center for route planning, dispatch prioritization,
-            order lookup, network resilience, and executive business impact analysis across
-            {len(NODES)} operating nodes.
-        </p>
-    </section>
-    """,
-    unsafe_allow_html=True,
-)
+with st.container(border=True):
+    st.caption("UAE last-mile delivery simulator")
+    st.title("WaselX Delivery Network Optimization")
+    st.markdown(
+        f"""
+        A self-contained DSA command center for route planning, dispatch prioritization,
+        order lookup, network resilience, and executive business impact analysis across
+        **{len(NODES)} operating nodes**.
+        """
+    )
 
 render_kpis(
     [
