@@ -25,31 +25,142 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    .main { padding-top: 1rem; }
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
+    .stApp {
+        background-color: #f6f8fb;
+        background-image:
+            linear-gradient(90deg, rgba(30, 64, 175, 0.045) 1px, transparent 1px),
+            linear-gradient(rgba(15, 118, 110, 0.045) 1px, transparent 1px),
+            linear-gradient(135deg, #f7fbff 0%, #fffaf0 48%, #f5fff8 100%);
+        background-size: 34px 34px, 34px 34px, 100% 100%;
     }
-    .alert-success {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 0.5rem;
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2.5rem;
+        max-width: 1240px;
     }
-    .alert-warning {
-        background-color: #fff3cd;
-        border: 1px solid #ffeeba;
-        color: #856404;
-        padding: 1rem;
-        border-radius: 0.5rem;
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f172a 0%, #133f4b 58%, #184e43 100%);
+    }
+    [data-testid="stSidebar"] * {
+        color: #f8fafc;
+    }
+    h1, h2, h3 {
+        letter-spacing: 0;
+    }
+    .wx-hero {
+        padding: 1.35rem 1.45rem;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 8px;
+        background:
+            linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 118, 110, 0.92)),
+            repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 12px);
+        color: #f8fafc;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+        margin-bottom: 1rem;
+    }
+    .wx-eyebrow {
+        color: #facc15;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+    }
+    .wx-hero h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 2rem;
+        line-height: 1.12;
+    }
+    .wx-hero p {
+        max-width: 860px;
+        margin: 0.7rem 0 0;
+        color: #dbeafe;
+        font-size: 1rem;
+    }
+    .wx-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.8rem;
+        margin: 0.65rem 0 1.05rem;
+    }
+    .wx-kpi {
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-left: 5px solid var(--accent);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.88);
+        padding: 0.95rem 1rem;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+    .wx-kpi-label {
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .wx-kpi-value {
+        color: #0f172a;
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-top: 0.25rem;
+    }
+    .wx-kpi-note {
+        color: #64748b;
+        font-size: 0.82rem;
+        margin-top: 0.25rem;
+    }
+    .wx-insight {
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        border-left: 6px solid var(--accent);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.91);
+        padding: 1rem 1.1rem;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+        margin: 0.85rem 0 1rem;
+    }
+    .wx-insight h4 {
+        color: #0f172a;
+        margin: 0 0 0.45rem;
+    }
+    .wx-insight ul {
+        margin: 0.25rem 0 0 1.1rem;
+        color: #334155;
+    }
+    .wx-insight li {
+        margin: 0.2rem 0;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-color: rgba(15, 23, 42, 0.18);
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+        background: rgba(255, 255, 255, 0.9);
+    }
+    @media (max-width: 900px) {
+        .wx-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .wx-hero h1 { font-size: 1.55rem; }
+    }
+    @media (max-width: 560px) {
+        .wx-kpi-grid { grid-template-columns: 1fr; }
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
+BUSINESS_CONTEXT = {
+    "daily_orders": 3500,
+    "peak_orders": 6000,
+    "riders": 200,
+    "restaurant_partners": 1200,
+    "retail_merchants": 300,
+    "route_waste_pct": 23,
+    "annual_excess_cost_aed": 1_200_000,
+    "dispatch_delay_min": 8,
+    "late_complaint_pct": 12,
+    "lookup_seconds": 45,
+    "csat": 3.2,
+}
 
 
 def get_simulator() -> Simulator:
@@ -69,6 +180,55 @@ def get_blocked_edges(simulator: Simulator) -> list[tuple[str, str]]:
             seen.add(edge)
             blocked.append(edge)
     return sorted(blocked)
+
+
+def format_aed(value: int | float) -> str:
+    """Format AED values compactly for KPI cards."""
+    if value >= 1_000_000:
+        return f"AED {value / 1_000_000:.1f}M"
+    if value >= 1_000:
+        return f"AED {value / 1_000:.0f}K"
+    return f"AED {value:,.0f}"
+
+
+def kpi_card(label: str, value: str, note: str, accent: str) -> str:
+    """Return one KPI card as HTML."""
+    return f"""
+        <div class="wx-kpi" style="--accent:{accent}">
+            <div class="wx-kpi-label">{label}</div>
+            <div class="wx-kpi-value">{value}</div>
+            <div class="wx-kpi-note">{note}</div>
+        </div>
+    """
+
+
+def render_kpis(cards: list[tuple[str, str, str, str]]) -> None:
+    """Render a grid of compact KPI cards."""
+    html = '<div class="wx-kpi-grid">' + "".join(kpi_card(*card) for card in cards) + "</div>"
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_insight(title: str, bullets: list[str], accent: str = "#0f766e") -> None:
+    """Render a business insight panel."""
+    bullet_html = "".join(f"<li>{bullet}</li>" for bullet in bullets)
+    st.markdown(
+        f"""
+        <div class="wx-insight" style="--accent:{accent}">
+            <h4>{title}</h4>
+            <ul>{bullet_html}</ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_plot_box(title: str, fig, caption: str | None = None) -> None:
+    """Render an outlined plot container for network topology or charts."""
+    with st.container(border=True):
+        st.markdown(f"#### {title}")
+        st.plotly_chart(fig, width="stretch")
+        if caption:
+            st.caption(caption)
 
 
 def edge_trace(edges, color="#d3d3d3", width=1.5, name="Routes", dash=None):
@@ -92,10 +252,11 @@ def edge_trace(edges, color="#d3d3d3", width=1.5, name="Routes", dash=None):
     )
 
 
-def create_network_graph(highlighted_paths=None, blocked_edges=None):
+def create_network_graph(highlighted_paths=None, blocked_edges=None, highlighted_edges=None):
     """Create the WaselX delivery network as a Plotly figure."""
     highlighted_paths = highlighted_paths or []
     blocked_edges = blocked_edges or []
+    highlighted_edges = highlighted_edges or []
     blocked_set = {tuple(sorted(edge)) for edge in blocked_edges}
 
     active_edges = [
@@ -115,6 +276,16 @@ def create_network_graph(highlighted_paths=None, blocked_edges=None):
                 width=3,
                 name="Blocked routes",
                 dash="dash",
+            )
+        )
+
+    for edges, color, width, name in highlighted_edges:
+        fig.add_trace(
+            edge_trace(
+                [(from_node, to_node, 0, 0, 0) for from_node, to_node, *_ in edges],
+                color=color,
+                width=width,
+                name=name,
             )
         )
 
@@ -260,11 +431,13 @@ def get_mst_results():
             "edges": len(kruskal_edges),
             "cost": kruskal_cost,
             "connections": [f"{from_node}-{to_node}" for from_node, to_node, _ in kruskal_edges[:5]],
+            "raw_edges": kruskal_edges,
         },
         "prim": {
             "edges": len(prim_edges),
             "cost": prim_cost,
             "connections": [f"{from_node}-{to_node}" for from_node, to_node, _ in prim_edges[:5]],
+            "raw_edges": prim_edges,
         },
     }
 
@@ -348,13 +521,64 @@ def clear_route_blocks():
     get_simulator().clear_blocks()
 
 
-st.title("WaselX Delivery Network Optimization")
-st.markdown("Self-contained DSA simulator with local algorithms and Plotly visualizations.")
+st.markdown(
+    f"""
+    <section class="wx-hero">
+        <div class="wx-eyebrow">UAE last-mile delivery simulator</div>
+        <h1>WaselX Delivery Network Optimization</h1>
+        <p>
+            A self-contained DSA command center for route planning, dispatch prioritization,
+            order lookup, network resilience, and executive business impact analysis across
+            {len(NODES)} operating nodes.
+        </p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+render_kpis(
+    [
+        (
+            "Daily Orders",
+            f"{BUSINESS_CONTEXT['daily_orders']:,}",
+            f"Peaks at {BUSINESS_CONTEXT['peak_orders']:,} during Ramadan/holidays",
+            "#0f766e",
+        ),
+        (
+            "Rider Fleet",
+            f"{BUSINESS_CONTEXT['riders']}",
+            "Bikes and cars across UAE delivery zones",
+            "#2563eb",
+        ),
+        (
+            "Route Waste",
+            f"{BUSINESS_CONTEXT['route_waste_pct']}%",
+            f"{format_aed(BUSINESS_CONTEXT['annual_excess_cost_aed'])}/year fuel and time impact",
+            "#dc2626",
+        ),
+        (
+            "Support Lookup",
+            f"{BUSINESS_CONTEXT['lookup_seconds']} sec",
+            f"Current CSAT baseline: {BUSINESS_CONTEXT['csat']}/5",
+            "#b45309",
+        ),
+    ]
+)
 
 with st.sidebar:
-    st.header("Navigation")
+    st.header("WaselX Console")
     st.success("Self-contained mode")
     st.caption("No external Flask API is required on Streamlit Cloud.")
+    st.markdown(
+        f"""
+        **Business baseline**
+
+        - {BUSINESS_CONTEXT['restaurant_partners']:,}+ restaurant partners
+        - {BUSINESS_CONTEXT['retail_merchants']:,}+ retail merchants
+        - {BUSINESS_CONTEXT['dispatch_delay_min']}-minute dispatch delay
+        - {BUSINESS_CONTEXT['late_complaint_pct']}% late-delivery complaints
+        """
+    )
     st.divider()
 
     page = st.radio(
@@ -380,10 +604,21 @@ if page == "Network":
     with col5:
         st.metric("Status", "Online" if status["network_connected"] else "Offline")
 
+    render_insight(
+        "Network business insight",
+        [
+            f"WaselX currently loses {BUSINESS_CONTEXT['route_waste_pct']}% extra distance against optimal routing, creating {format_aed(BUSINESS_CONTEXT['annual_excess_cost_aed'])} in annual fuel and time exposure.",
+            f"The graph captures {status['hubs']} hub nodes and {status['distribution_centers']} delivery zones, matching the operating map from the assignment brief.",
+            f"{status['best_hub']} ({status['best_hub_label']}) is the strongest hub candidate for control-tower visibility and inter-hub coordination.",
+        ],
+        "#0f766e",
+    )
+
     st.divider()
-    st.plotly_chart(
+    render_plot_box(
+        "Outlined Network Topology",
         create_network_graph(blocked_edges=get_blocked_edges(get_simulator())),
-        use_container_width=True,
+        "Hub nodes, delivery zones, route edges, and any simulated road closures are shown in one boxed topology view.",
     )
 
     st.markdown(
@@ -402,6 +637,15 @@ if page == "Network":
 
 elif page == "Path Finder":
     st.header("Find Shortest Path")
+    render_insight(
+        "Path finder business insight",
+        [
+            "Dijkstra's algorithm is the right fit for real-time source-to-destination routing because each order needs one best route, not every possible route pair.",
+            f"At {BUSINESS_CONTEXT['daily_orders']:,} daily orders, even small distance reductions compound into measurable rider utilization and SLA gains.",
+            "Compare distance, time, and AED cost to show when the cheapest route is not the fastest route for VIP or express orders.",
+        ],
+        "#2563eb",
+    )
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -440,7 +684,11 @@ elif page == "Path Finder":
                 st.metric("Cost", f"{result['cost']} AED")
             with col4:
                 st.metric("Hops", result["hops"])
-            st.plotly_chart(result["fig"], use_container_width=True)
+            render_plot_box(
+                "Outlined Path Topology",
+                result["fig"],
+                "The selected route is highlighted inside the network box for clear evaluator walkthroughs.",
+            )
         else:
             st.error(f"No path found from {start_node} to {end_node}.")
 
@@ -461,13 +709,26 @@ elif page == "Path Finder":
                 for item in path_items
             ]
             st.dataframe(pd.DataFrame(comparison_data), use_container_width=True)
-            st.plotly_chart(result["fig"], use_container_width=True)
+            render_plot_box(
+                "Outlined Multi-Criteria Topology",
+                result["fig"],
+                "Distance, time, and cost routes are overlaid so operational trade-offs are visible.",
+            )
         else:
             st.error(f"No comparable paths found from {start_node} to {end_node}.")
 
 
 elif page == "Algorithms":
     st.header("Algorithm Performance Benchmarks")
+    render_insight(
+        "Algorithm business insight",
+        [
+            f"Priority-queue dispatch targets the current {BUSINESS_CONTEXT['dispatch_delay_min']}-minute batch delay and helps protect VIP same-hour orders.",
+            f"Binary search and tree-based indexing address the {BUSINESS_CONTEXT['lookup_seconds']}-second support lookup pain point behind CSAT {BUSINESS_CONTEXT['csat']}/5.",
+            "MST planning supports the assignment's fiber-tracking system by minimizing infrastructure cost across all operating nodes.",
+        ],
+        "#7c3aed",
+    )
 
     tab1, tab2, tab3 = st.tabs(["Sorting", "Minimum Spanning Tree", "Searching"])
 
@@ -481,7 +742,11 @@ elif page == "Algorithms":
             - **Test case:** reversed delivery-route list
             """
         )
-        st.plotly_chart(benchmark["fig"], use_container_width=True)
+        render_plot_box(
+            "Outlined Sorting Benchmark",
+            benchmark["fig"],
+            "Comparison counts show why quadratic sorting becomes costly as order manifests scale.",
+        )
 
         size_100 = benchmark["data"][benchmark["data"]["Size"] == 100].iloc[0]
         results_df = pd.DataFrame(
@@ -528,6 +793,15 @@ elif page == "Algorithms":
         )
         st.dataframe(comparison, use_container_width=True)
 
+        mst_fig = create_network_graph(
+            highlighted_edges=[(kruskal["raw_edges"], "#7c3aed", 4, "Kruskal MST cable plan")]
+        )
+        render_plot_box(
+            "Outlined MST Topology",
+            mst_fig,
+            "The highlighted backbone shows the minimum-cost tracking infrastructure plan.",
+        )
+
     with tab3:
         st.subheader("Search Algorithm Performance")
         search = get_search_benchmark()
@@ -560,11 +834,34 @@ elif page == "Algorithms":
             labels={"value": "Comparisons", "variable": "Algorithm"},
             barmode="group",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        render_plot_box(
+            "Outlined Search Benchmark",
+            fig,
+            "The lookup benchmark connects directly to customer-support wait time reduction.",
+        )
+
+    mst_context = get_mst_results()
+    context_fig = create_network_graph(
+        highlighted_edges=[(mst_context["kruskal"]["raw_edges"], "#0f766e", 3, "Cost-efficient backbone")]
+    )
+    render_plot_box(
+        "Outlined Algorithm Topology Context",
+        context_fig,
+        "This boxed topology keeps the network visible while reviewing algorithm outputs.",
+    )
 
 
 elif page == "Simulator":
     st.header("Road Closure Simulator")
+    render_insight(
+        "Simulator business insight",
+        [
+            "Road closures should trigger immediate rerouting, dispatcher alerts, and updated rider guidance before SLA windows are missed.",
+            "The assignment brief frames this as operational resilience: management needs live road feeds, route recalculation, and exception handling.",
+            f"Protecting peak-volume days matters most because WaselX can reach {BUSINESS_CONTEXT['peak_orders']:,} orders during Ramadan and national holidays.",
+        ],
+        "#dc2626",
+    )
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -605,9 +902,10 @@ elif page == "Simulator":
             st.rerun()
 
     st.divider()
-    st.plotly_chart(
+    render_plot_box(
+        "Outlined Simulator Topology",
         create_network_graph(blocked_edges=blocked_edges),
-        use_container_width=True,
+        "Blocked routes are boxed and shown as dashed red lines for clear incident-review demos.",
     )
     st.markdown("The network remains operational for demonstration purposes while blocked routes are highlighted.")
 
